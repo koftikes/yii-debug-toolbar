@@ -1,4 +1,4 @@
-#yii2-debug-toolbar {
+.yii2-debug-toolbar {
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -45,7 +45,7 @@
 	vertical-align: middle;
 }
 
-#yii2-debug-toolbar .label {
+.yii2-debug-toolbar .label {
 	display: inline-block;
 	padding: 2px 4px;
 	font-size: 11.844px;
@@ -58,63 +58,63 @@
 	background-color: #999999;
 }
 
-#yii2-debug-toolbar .label {
+.yii2-debug-toolbar .label {
 	-webkit-border-radius: 3px;
 	-moz-border-radius: 3px;
 	border-radius: 3px;
 }
 
-#yii2-debug-toolbar .label:empty {
+.yii2-debug-toolbar .label:empty {
 	display: none;
 }
 
-#yii2-debug-toolbar a.label:hover,
-#yii2-debug-toolbar a.label:focus {
+.yii2-debug-toolbar a.label:hover,
+.yii2-debug-toolbar a.label:focus {
 	color: #ffffff;
 	text-decoration: none;
 	cursor: pointer;
 }
 
-#yii2-debug-toolbar .label-important {
+.yii2-debug-toolbar .label-important {
 	background-color: #b94a48;
 }
 
-#yii2-debug-toolbar .label-important[href] {
+.yii2-debug-toolbar .label-important[href] {
 	background-color: #953b39;
 }
 
-#yii2-debug-toolbar .label-warning,
-#yii2-debug-toolbar .badge-warning {
+.yii2-debug-toolbar .label-warning,
+.yii2-debug-toolbar .badge-warning {
 	background-color: #f89406;
 }
 
-#yii2-debug-toolbar .label-warning[href] {
+.yii2-debug-toolbar .label-warning[href] {
 	background-color: #c67605;
 }
 
-#yii2-debug-toolbar .label-success {
+.yii2-debug-toolbar .label-success {
 	background-color: #468847;
 }
 
-#yii2-debug-toolbar .label-success[href] {
+.yii2-debug-toolbar .label-success[href] {
 	background-color: #356635;
 }
 
-#yii2-debug-toolbar .label-info {
+.yii2-debug-toolbar .label-info {
 	background-color: #3a87ad;
 }
 
-#yii2-debug-toolbar .label-info[href] {
+.yii2-debug-toolbar .label-info[href] {
 	background-color: #2d6987;
 }
 
-#yii2-debug-toolbar .label-inverse,
-#yii2-debug-toolbar .badge-inverse {
+.yii2-debug-toolbar .label-inverse,
+.yii2-debug-toolbar .badge-inverse {
 	background-color: #333333;
 }
 
-#yii2-debug-toolbar .label-inverse[href],
-#yii2-debug-toolbar .badge-inverse[href] {
+.yii2-debug-toolbar .label-inverse[href],
+.yii2-debug-toolbar .badge-inverse[href] {
 	background-color: #1a1a1a;
 }
 span.indent {
