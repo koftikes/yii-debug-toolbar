@@ -174,36 +174,42 @@ class Yii2Debug extends CApplicationComponent
 	protected function initToolbar()
 	{
 		if (!$this->checkAccess()) return;
-		$assetsUrl = CHtml::asset(dirname(__FILE__) . '/assets');
 		/* @var CClientScript $cs */
 		$cs = Yii::app()->getClientScript();
 		$cs->registerCoreScript('jquery');
 		$url = Yii::app()->createUrl($this->moduleId . '/default/toolbar', array('tag' => $this->getTag()));
 		$cs->registerScript(__CLASS__ . '#toolbar', <<<JS
+    function getToolbar() {
+        if (window.localStorage && localStorage.getItem('yii2-debug-toolbar') == 'minimized') {
+            $('.yii2-debug-toolbar').hide();
+            $('.yii2-debug-toolbar-min').show();
+        } else {
+            $('.yii2-debug-toolbar-min').hide();
+            $('.yii2-debug-toolbar').show();
+        }
+        $('.yii2-debug-toolbar .yii2-debug-toolbar-toggler').click(function(){
+            $('.yii2-debug-toolbar').hide();
+            $('.yii2-debug-toolbar-min').show();
+            if (window.localStorage) {
+                localStorage.setItem('yii2-debug-toolbar', 'minimized');
+            }
+        });
+        $('.yii2-debug-toolbar-min .yii2-debug-toolbar-toggler').click(function(){
+            $('.yii2-debug-toolbar-min').hide();
+            $('.yii2-debug-toolbar').show();
+            if (window.localStorage) {
+                localStorage.setItem('yii2-debug-toolbar', 'maximized');
+            }
+        });
+    }
+
 (function($){
-	$('<div>').appendTo('body').load('$url', function(){
-		if (window.localStorage && localStorage.getItem('yii2-debug-toolbar') == 'minimized') {
-			$('#yii2-debug-toolbar').hide();
-			$('#yii2-debug-toolbar-min').show();
-		} else {
-			$('#yii2-debug-toolbar-min').hide();
-			$('#yii2-debug-toolbar').show();
-		}
-		$('#yii2-debug-toolbar .yii2-debug-toolbar-toggler').click(function(){
-			$('#yii2-debug-toolbar').hide();
-			$('#yii2-debug-toolbar-min').show();
-			if (window.localStorage) {
-				localStorage.setItem('yii2-debug-toolbar', 'minimized');
-			}
-		});
-		$('#yii2-debug-toolbar-min .yii2-debug-toolbar-toggler').click(function(){
-			$('#yii2-debug-toolbar-min').hide();
-			$('#yii2-debug-toolbar').show();
-			if (window.localStorage) {
-				localStorage.setItem('yii2-debug-toolbar', 'maximized');
-			}
-		});
-	});
+    var yii2Debug = $('#yii2-debug');
+    if(yii2Debug.length > 0) {
+        yii2Debug.load('$url', function() { getToolbar(); }); 
+    } else {
+      	$('<div id="yii2-debug">').appendTo('body').load('$url', function() { getToolbar(); });  
+    }
 })(jQuery);
 JS
 		);
