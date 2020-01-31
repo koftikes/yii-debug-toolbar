@@ -1,234 +1,245 @@
 <?php
 
 /**
- * @author Roman Zhuravlev <zhuravljov@gmail.com>
- * @package Yii2Debug
- * @since 1.1.13
+ * @author  Roman Zhuravlev <zhuravljov@gmail.com>
+ *
+ * @since   1.1.13
  *
  * @property Yii2Debug $owner
  */
 class DefaultController extends CController
 {
-	public $layout = 'main';
-	public $summary;
+    public $layout = 'main';
 
-	/**
-	 * @inheritdoc
-	 */
-	public function actions()
-	{
-		$actions = array();
-		foreach ($this->owner->panels as $panel) {
-			$actions = array_merge($actions, $panel->actions);
-		}
-		return $actions;
-	}
+    public $summary;
 
-	/**
-	 * @return Yii2Debug
-	 */
-	public function getOwner()
-	{
-		return $this->getModule()->owner;
-	}
+    /**
+     * {@inheritdoc}
+     */
+    public function actions()
+    {
+        $actions = [];
+        foreach ($this->owner->panels as $panel) {
+            $actions = \array_merge($actions, $panel->actions);
+        }
 
-	/**
-	 * @return Yii2Debug
-	 * @deprecated will removed in 1.2
-	 */
-	public function getComponent()
-	{
-		return $this->getModule()->owner;
-	}
+        return $actions;
+    }
 
-	/**
-	 * Общий список логов
-	 */
-	public function actionIndex()
-	{
-		$this->render('index', array(
-			'manifest' => $this->getManifest(),
-		));
-	}
+    /**
+     * @return Yii2Debug
+     */
+    public function getOwner()
+    {
+        return $this->getModule()->owner;
+    }
 
-	/**
-	 * Страница для просмотра отладочной информации
-	 * @param null $tag сохраненного лога
-	 * @param null $panel id страницы
-	 */
-	public function actionView($tag = null, $panel = null)
-	{
-		if ($tag === null) {
-			$tags = array_keys($this->getManifest());
-			$tag = reset($tags);
-			$this->redirect(array('view', 'tag' => $tag, 'panel' => $panel));
-		}
-		$this->loadData($tag);
-		if (isset($this->component->panels[$panel])) {
-			$activePanel = $this->getOwner()->panels[$panel];
-		} else {
-			$activePanel = $this->getOwner()->panels['request'];
-		}
-		$this->render('view', array(
-			'tag' => $tag,
-			'summary' => $this->summary,
-			'manifest' => $this->getManifest(),
-			'panels' => $this->getOwner()->panels,
-			'activePanel' => $activePanel,
-		));
-	}
+    /**
+     * @return Yii2Debug
+     *
+     * @deprecated will removed in 1.2
+     */
+    public function getComponent()
+    {
+        return $this->getModule()->owner;
+    }
 
-	/**
-	 * Блокировка/разблокировка лога от автоматического удаления
-	 * @param string $tag
-	 */
-	public function actionLock($tag)
-	{
-		$lock = $this->getOwner()->getLock($tag);
-		$this->getOwner()->setLock($tag, !$lock);
-		echo !$lock;
-	}
+    /**
+     * Общий список логов.
+     */
+    public function actionIndex()
+    {
+        $this->render('index', [
+            'manifest' => $this->getManifest(),
+        ]);
+    }
 
-	/**
-	 * @param string $tag
-	 * @param int $num
-	 * @param string $connection
-	 * @throws CHttpException
-	 * @throws Exception
-	 */
-	public function actionExplain($tag, $num, $connection)
-	{
-		$this->loadData($tag);
+    /**
+     * Страница для просмотра отладочной информации.
+     *
+     * @param null $tag   сохраненного лога
+     * @param null $panel id страницы
+     *
+     * @throws CHttpException
+     */
+    public function actionView($tag = null, $panel = null)
+    {
+        if (null === $tag) {
+            $tags = \array_keys($this->getManifest());
+            $tag  = \reset($tags);
+            $this->redirect(['view', 'tag' => $tag, 'panel' => $panel]);
+        }
+        $this->loadData($tag);
+        if (isset($this->component->panels[$panel])) {
+            $activePanel = $this->getOwner()->panels[$panel];
+        } else {
+            $activePanel = $this->getOwner()->panels['request'];
+        }
+        $this->render('view', [
+            'tag'         => $tag,
+            'summary'     => $this->summary,
+            'manifest'    => $this->getManifest(),
+            'panels'      => $this->getOwner()->panels,
+            'activePanel' => $activePanel,
+        ]);
+    }
 
-		$dbPanel = $this->getOwner()->panels['db'];
-		if (!($dbPanel instanceof Yii2DbPanel)) {
-			throw new Exception('Yii2DbPanel not found');
-		}
-		if (!$dbPanel->canExplain) {
-			throw new CHttpException(403, 'Forbidden');
-		}
-		$message = $dbPanel->messageByNum($num);
-		if ($message === null) {
-			throw new Exception("Not found query by number $num");
-		}
-		$query = $dbPanel->formatSql($message, true);
-		/* @var CDbConnection $db */
-		$db = Yii::app()->getComponent($connection);
+    /**
+     * Блокировка/разблокировка лога от автоматического удаления.
+     *
+     * @param string $tag
+     */
+    public function actionLock($tag)
+    {
+        $lock = $this->getOwner()->getLock($tag);
+        $this->getOwner()->setLock($tag, !$lock);
+        echo !$lock;
+    }
 
-		if (!Yii::app()->request->isAjaxRequest) {
-			$this->getOwner()->setLock($tag, true);
-			$this->render('explain', array(
-				'tag' => $tag,
-				'summary' => $this->summary,
-				'manifest' => $this->getManifest(),
-				'panels' => $this->getOwner()->panels,
-				'dbPanel' => $dbPanel,
-				'connection' => $db,
-				'procedure' => $dbPanel->getExplainQuery($query, $db->driverName),
-				'explainRows' => $dbPanel->explain($query, $db),
-			));
-		} else {
-			$this->renderPartial('_explain', array(
-				'connection' => $db,
-				'explainRows' => $dbPanel->explain($query, $db),
-			));
-		}
-	}
+    /**
+     * @param string $tag
+     * @param int    $num
+     * @param string $connection
+     *
+     * @throws CHttpException
+     * @throws Exception
+     */
+    public function actionExplain($tag, $num, $connection)
+    {
+        $this->loadData($tag);
 
-	/**
-	 * Генерирует код дебаг-панели по ajax-запросу
-	 * @param $tag
-	 */
-	public function actionToolbar($tag)
-	{
-		$this->loadData($tag, 5);
-		$this->renderPartial('toolbar', array(
-			'tag' => $tag,
-			'panels' => $this->getOwner()->panels,
-		));
-	}
+        $dbPanel = $this->getOwner()->panels['db'];
+        if (!($dbPanel instanceof Yii2DbPanel)) {
+            throw new Exception('Yii2DbPanel not found');
+        }
+        if (!$dbPanel->canExplain) {
+            throw new CHttpException(403, 'Forbidden');
+        }
+        $message = $dbPanel->messageByNum($num);
+        if (null === $message) {
+            throw new Exception("Not found query by number ${num}");
+        }
+        $query = $dbPanel->formatSql($message, true);
+        /** @var CDbConnection $db */
+        $db = Yii::app()->getComponent($connection);
 
-	public function actionPhpinfo()
-	{
-		phpinfo();
-	}
+        if (!Yii::app()->request->isAjaxRequest) {
+            $this->getOwner()->setLock($tag, true);
+            $this->render('explain', [
+                'tag'         => $tag,
+                'summary'     => $this->summary,
+                'manifest'    => $this->getManifest(),
+                'panels'      => $this->getOwner()->panels,
+                'dbPanel'     => $dbPanel,
+                'connection'  => $db,
+                'procedure'   => $dbPanel->getExplainQuery($query, $db->driverName),
+                'explainRows' => $dbPanel->explain($query, $db),
+            ]);
+        } else {
+            $this->renderPartial('_explain', [
+                'connection'  => $db,
+                'explainRows' => $dbPanel->explain($query, $db),
+            ]);
+        }
+    }
 
-	protected function getManifest($forceReload = false)
-	{
-		return $this->getOwner()->getStorage()->getManifest($forceReload);
-	}
+    /**
+     * Генерирует код дебаг-панели по ajax-запросу.
+     *
+     * @param $tag
+     */
+    public function actionToolbar($tag)
+    {
+        $this->loadData($tag, 5);
+        $this->renderPartial('toolbar', [
+            'tag'    => $tag,
+            'panels' => $this->getOwner()->panels,
+        ]);
+    }
 
-	protected function loadData($tag, $maxRetry = 0)
-	{
-		$data = $this->getOwner()->getStorage()->loadTag($tag, $maxRetry);
-		if (array() === $data) {
-			throw new CHttpException(404, "Unable to find debug data tagged with '$tag'.");
-		}
+    public function actionPhpinfo()
+    {
+        \phpinfo();
+    }
 
-		foreach ($this->owner->panels as $id => $panel) {
-			if (isset($data[$id])) {
-				$panel->load($data[$id], $tag);
-			} else {
-				// remove the panel since it has not received any data
-				unset($this->owner->panels[$id]);
-			}
-		}
-		$this->summary = $data['summary'];
-	}
+    protected function getManifest($forceReload = false)
+    {
+        return $this->getOwner()->getStorage()->getManifest($forceReload);
+    }
 
-	public function actionConfig()
-	{
-		if (!$this->getOwner()->showConfig) {
-			throw new CHttpException(403, 'Forbidden');
-		}
-		$components = array();
-		foreach (Yii::app()->getComponents(false) as $id => $config) {
-			try {
-				$components[$id] = Yii::app()->getComponent($id);
-			} catch (Exception $e) {
-				assert(is_array($config));
-				$components[$id] = array_merge($config, array(
-					'_error_' => $e->getMessage(),
-				));
-			}
-		}
-		ksort($components);
-		$modules = Yii::app()->modules;
-		ksort($modules);
-		$data = $this->hideConfigData(
-			array(
-				'app' => Yii2Debug::prepareData(Yii::app()),
-				'components' => Yii2Debug::prepareData($components),
-				'modules' => Yii2Debug::prepareData($modules),
-				'params' => Yii2Debug::prepareData(Yii::app()->params),
-			),
-			$this->getOwner()->hiddenConfigOptions
-		);
-		$this->render('config', $data);
-	}
+    protected function loadData($tag, $maxRetry = 0)
+    {
+        $data = $this->getOwner()->getStorage()->loadTag($tag, $maxRetry);
+        if ([] === $data) {
+            throw new CHttpException(404, "Unable to find debug data tagged with '${tag}'.");
+        }
 
-	/**
-	 * @param array $config
-	 * @param array $options
-	 * @return array
-	 */
-	private function hideConfigData($config, $options)
-	{
-		foreach ($options as $option) {
-			$item = &$config;
-			foreach (explode('/', $option) as $key) {
-				if (is_array($item) && isset($item[$key])) {
-					$item = &$item[$key];
-				} else {
-					unset($item);
-					break;
-				}
-			}
-			if (isset($item)) {
-				$item = '**********';
-				unset($item);
-			}
-		}
-		return $config;
-	}
+        foreach ($this->owner->panels as $id => $panel) {
+            if (isset($data[$id])) {
+                $panel->load($data[$id], $tag);
+            } else {
+                // remove the panel since it has not received any data
+                unset($this->owner->panels[$id]);
+            }
+        }
+        $this->summary = $data['summary'];
+    }
+
+    public function actionConfig()
+    {
+        if (!$this->getOwner()->showConfig) {
+            throw new CHttpException(403, 'Forbidden');
+        }
+        $components = [];
+        foreach (Yii::app()->getComponents(false) as $id => $config) {
+            try {
+                $components[$id] = Yii::app()->getComponent($id);
+            } catch (Exception $e) {
+                \assert(\is_array($config));
+                $components[$id] = \array_merge($config, [
+                    '_error_' => $e->getMessage(),
+                ]);
+            }
+        }
+        \ksort($components);
+        $modules = Yii::app()->modules;
+        \ksort($modules);
+        $data = $this->hideConfigData(
+            [
+                'app'        => Yii2Debug::prepareData(Yii::app()),
+                'components' => Yii2Debug::prepareData($components),
+                'modules'    => Yii2Debug::prepareData($modules),
+                'params'     => Yii2Debug::prepareData(Yii::app()->params),
+            ],
+            $this->getOwner()->hiddenConfigOptions
+        );
+        $this->render('config', $data);
+    }
+
+    /**
+     * @param array $config
+     * @param array $options
+     *
+     * @return array
+     */
+    private function hideConfigData($config, $options)
+    {
+        foreach ($options as $option) {
+            $item = &$config;
+            foreach (\explode('/', $option) as $key) {
+                if (\is_array($item) && isset($item[$key])) {
+                    $item = &$item[$key];
+                } else {
+                    unset($item);
+                    break;
+                }
+            }
+            if (isset($item)) {
+                $item = '**********';
+                unset($item);
+            }
+        }
+
+        return $config;
+    }
 }
