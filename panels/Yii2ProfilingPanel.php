@@ -1,81 +1,82 @@
 <?php
 
 /**
- * @author Roman Zhuravlev <zhuravljov@gmail.com>
- * @package Yii2Debug
- * @since 1.1.13
+ * @author  Roman Zhuravlev <zhuravljov@gmail.com>
+ *
+ * @since   1.1.13
  */
 class Yii2ProfilingPanel extends Yii2DebugPanel
 {
-	/**
-	 * @inheritdoc
-	 */
-	public function init()
-	{
-		$this->_logsEnabled = true;
-		$this->_logsLevels = CLogger::LEVEL_PROFILE;
-		parent::init();
-	}
+    /**
+     * {@inheritdoc}
+     */
+    public function init()
+    {
+        $this->_logsEnabled = true;
+        $this->_logsLevels  = CLogger::LEVEL_PROFILE;
+        parent::init();
+    }
 
-	public function getName()
-	{
-		return 'Profiling';
-	}
+    public function getName()
+    {
+        return 'Profiling';
+    }
 
-	public function getSummary()
-	{
-		return $this->render(dirname(__FILE__) . '/../views/panels/profiling_bar.php', array(
-			'time' => number_format($this->data['time'] * 1000) . ' ms',
-			'memory' => sprintf('%.1f MB', $this->data['memory'] / 1048576),
-		));
-	}
+    public function getSummary()
+    {
+        return $this->render(\dirname(__FILE__) . '/../views/panels/profiling_bar.php', [
+            'time'   => \number_format($this->data['time'] * 1000) . ' ms',
+            'memory' => \sprintf('%.1f MB', $this->data['memory'] / 1048576),
+        ]);
+    }
 
-	public function getDetail()
-	{
-		$messages = $this->data['messages'];
-		$timings = array();
-		$stack = array();
-		foreach ($messages as $i => $log) {
-			list($token, , $category, $timestamp) = $log;
-			$log[4] = $i;
-			if (strpos($token, 'begin:') === 0) {
-				$log[0] = $token = substr($token, 6);
-				$stack[] = $log;
-			} elseif (strpos($token, 'end:') === 0) {
-				$log[0] = $token = substr($token, 4);
-				if (($last = array_pop($stack)) !== null && $last[0] === $token) {
-					$timings[$last[4]] = array(count($stack), $token, $category, $timestamp - $last[3]);
-				}
-			}
-		}
-		$now = microtime(true);
-		while (($last = array_pop($stack)) !== null) {
-			$delta = $now - $last[3];
-			$timings[$last[4]] = array(count($stack), $last[0], $last[2], $delta);
-		}
-		ksort($timings);
-		$items = array();
-		foreach ($timings as $timing) {
-			$items[] = array(
-				'indent' => $timing[0],
-				'procedure' => $timing[1],
-				'category' => $timing[2],
-				'time' => sprintf('%.1f ms', $timing[3] * 1000),
-			);
-		}
-		return $this->render(dirname(__FILE__) . '/../views/panels/profiling.php', array(
-			'items' => $items,
-			'time' => number_format($this->data['time'] * 1000) . ' ms',
-			'memory' => sprintf('%.1f MB', $this->data['memory'] / 1048576),
-		));
-	}
+    public function getDetail()
+    {
+        $messages = $this->data['messages'];
+        $timings  = [];
+        $stack    = [];
+        foreach ($messages as $i => $log) {
+            list($token, , $category, $timestamp) = $log;
+            $log[4]                               = $i;
+            if (0 === \mb_strpos($token, 'begin:')) {
+                $log[0]  = $token = \mb_substr($token, 6);
+                $stack[] = $log;
+            } elseif (0 === \mb_strpos($token, 'end:')) {
+                $log[0] = $token = \mb_substr($token, 4);
+                if (null !== ($last = \array_pop($stack)) && $last[0] === $token) {
+                    $timings[$last[4]] = [\count($stack), $token, $category, $timestamp - $last[3]];
+                }
+            }
+        }
+        $now = \microtime(true);
+        while (null !== ($last = \array_pop($stack))) {
+            $delta             = $now - $last[3];
+            $timings[$last[4]] = [\count($stack), $last[0], $last[2], $delta];
+        }
+        \ksort($timings);
+        $items = [];
+        foreach ($timings as $timing) {
+            $items[] = [
+                'indent'    => $timing[0],
+                'procedure' => $timing[1],
+                'category'  => $timing[2],
+                'time'      => \sprintf('%.1f ms', $timing[3] * 1000),
+            ];
+        }
 
-	public function save()
-	{
-		return array(
-			'memory' => memory_get_peak_usage(),
-			'time' => microtime(true) - YII_BEGIN_TIME,
-			'messages' => $this->getLogs(),
-		);
-	}
+        return $this->render(\dirname(__FILE__) . '/../views/panels/profiling.php', [
+            'items'  => $items,
+            'time'   => \number_format($this->data['time'] * 1000) . ' ms',
+            'memory' => \sprintf('%.1f MB', $this->data['memory'] / 1048576),
+        ]);
+    }
+
+    public function save()
+    {
+        return [
+            'memory'   => \memory_get_peak_usage(),
+            'time'     => \microtime(true) - YII_BEGIN_TIME,
+            'messages' => $this->getLogs(),
+        ];
+    }
 }

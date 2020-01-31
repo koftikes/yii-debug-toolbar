@@ -161,32 +161,3 @@ Variables dumping
 
 With static method `Yii2Debug::dump()` you can dump any data and examine it later in debug log.
 
-Miscellaneous
-----------------
-
-### Status Code
-
-If you using PHP < 5.4, debug panel can't detect redirects by himself.
-You can use following code as workaround:
-
-```php
-'panels' => [
-    'request' => [
-        'filterData' => function($data) {
-            if (empty($data['statusCode'])) {
-                if (isset($data['responseHeaders']['Location'])) {
-                    $data['statusCode'] = 302;
-                } else {
-                    $data['statusCode'] = 200;
-                }
-            }
-            return $data;
-        },
-    ],
-],
-```
-
-Such code just set 302 code if `Location` header is present.
-Codes like 4xx and 5xx can be detected in debug panel by himself.
-In PHP 5.4 and higher debug panel uses native php function `http_response_code()` for detecting http response code,
-and there is no need to use this workaround.

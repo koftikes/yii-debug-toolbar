@@ -4,18 +4,14 @@
  * @author Roman Zhuravlev <zhuravljov@gmail.com>
  */
 
-;(function($)
-{
-    $(function()
-    {
-        $('table.table-filtered').each(function()
-        {
+;(function ($) {
+    $(function () {
+        $('table.table-filtered').each(function () {
             var
                 table = this, value = '',
                 input = $('<input type="search" placeholder="Search">');
 
-            input.keyup(function()
-            {
+            input.keyup(function () {
                 if ($(this).val() === value) return;
                 value = $(this).val();
                 if (value) {
@@ -33,8 +29,7 @@
         });
     });
 
-    $.expr[':'].Contains = function(a, i, m)
-    {
+    $.expr[':'].Contains = function (a, i, m) {
         return $(a).text().toLowerCase().indexOf(m[3].toLowerCase()) >= 0;
     };
 })(jQuery);
