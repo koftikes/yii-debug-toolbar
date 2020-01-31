@@ -1,6 +1,6 @@
 {
 	"name": "sbs/yii-debug-toolbar",
-	"description": "Debug panel for Yii 1.1 (ported from Yii 2)",
+	"description": "Debug panel for Yii 1.1 (Ported from Yii 2)",
 	"keywords": ["yii", "extension", "debug"],
 	"homepage": "https://github.com/koftikes/yii-debug-toolbar",
 	"type": "yii-extension",
