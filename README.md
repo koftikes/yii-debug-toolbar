@@ -1,4 +1,4 @@
-yii2-debug
+yii-debug-toolbar
 =================
 
 Debug panel for Yii 1.1 (ported from Yii 2).
