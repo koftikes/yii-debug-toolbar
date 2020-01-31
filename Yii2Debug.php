@@ -176,7 +176,6 @@ class Yii2Debug extends CApplicationComponent
 	 */
 	protected function initToolbar()
 	{
-		if (!$this->checkAccess()) return;
 		/* @var CClientScript $cs */
 		$cs = Yii::app()->getClientScript();
 		$cs->registerCoreScript('jquery');
